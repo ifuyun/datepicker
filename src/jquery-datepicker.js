@@ -1,10 +1,9 @@
-/*global jQuery*/
+/*global jQuery,document,window*/
 /**
- * 日期插件
- * jQuery插件形式调用
+ * jQuery日期插件
  * 结合textposition插件进行输入控制（需先引入textposition插件）
  * @author ifuyun
- * @version 1.0
+ * @version 1.0.1(2014-02-24)
  */
 (function ($) {
     var htmlTpl = '';
@@ -98,15 +97,25 @@
                             $(this).moveposition(posObj.start, 1);
                         }
                     }
-                    //重新获取value值
                     posObj = $(this).textposition();
+                    //重新获取value值
                     curVal = $(this).val();
                     curValLen = curVal.length;
                     if (posObj.start === 6) {
                         if (parseInt(curVal.charAt(5), 10) > 1 && !/^\d$/i.test(curVal.charAt(6))) {//后一字符非数字时
                             $(this).moveposition(posObj.start, -1);
+                            //{5,6}
                             $(this).textposition('0');
-                            $(this).moveposition(posObj.start, 1);
+                            //IE8-下修改时，修改月份后光标会移到末尾，而不是停留在当前位置的后一个字符，即位置从{5,6}到{10,10}，而不是{7,7}，但初始输入时正常
+                            //故针对IE8-需要重置光标位置为{1,7}
+                            $(this).moveposition(1 - posObj.start, 1);
+                            if (!$.support.leadingWhitespace) {//针对IE8-修改时
+                                //{8,8}
+                                $(this).moveposition(posObj.start, 0);
+                            } else {//正常情况
+                               $(this).moveposition(posObj.start, 1);
+                            }
+
                             if ($(this).val().charAt(posObj.start + 1) !== '-') {//修改时
                                 $(this).textposition('-');
                                 $(this).moveposition(posObj.start + 1, 1);
@@ -122,6 +131,7 @@
                     }
                 }
             }).on('keydown', function (e) {
+                //TODO:需考虑修改情况，此时输入的内容应替换原有的后一字符的内容
                 //控制字符在前
                 var keyCode = e.which, curVal = $(this).val(), curValLen = curVal.length, posObj = $(this).textposition();
                 if (keyCode === 8 || keyCode === 46) {//<--,Delete
@@ -418,12 +428,12 @@
         },
         getDateTable: function (curDateObj, actDateObj, firstWeek) {//生成日期表格
             //@formatter:off
-                var weekNames = this.opts.weekNames, $picker = this.$picker, i = 0, tblHtml = '', 
-                    year = actDateObj.curYear, month = actDateObj.curMonth, day = actDateObj.curDay, week = actDateObj.curWeek, 
-                    monthDays = this.getMonthDays(year, month), weeks = Math.ceil(monthDays / 7), 
-                    isCurYearMonth = false, isActYearMonth = false, dayClass = [], 
-                    minDate = this.getDateObj(this.opts.minDate), maxDate = this.getDateObj(this.opts.maxDate);
-                //@formatter:on
+            var weekNames = this.opts.weekNames, $picker = this.$picker, i = 0, tblHtml = '', 
+                year = actDateObj.curYear, month = actDateObj.curMonth, day = actDateObj.curDay, week = actDateObj.curWeek, 
+                monthDays = this.getMonthDays(year, month), weeks = Math.ceil(monthDays / 7), 
+                isCurYearMonth = false, isActYearMonth = false, dayClass = [], 
+                minDate = this.getDateObj(this.opts.minDate), maxDate = this.getDateObj(this.opts.maxDate);
+            //@formatter:on
 
             //生成星期表头
             tblHtml += '<tr class="weekTitle">';
@@ -447,13 +457,13 @@
             for ( i = 1; i <= monthDays; i += 1) {
                 dayClass = [];
                 //@formatter:off
-                    if ((minDate && (minDate.year > year || (minDate.year === year && minDate.month > month) || (minDate.year === year && minDate.month === month && minDate.day > i))) || 
-                        (maxDate && (maxDate.year < year || (maxDate.year === year && maxDate.month < month) || (maxDate.year === year && maxDate.month === month && maxDate.day < i)))) {
-                        dayClass.push('invalid');
-                    } else {
-                        dayClass.push('pickDay');
-                    }
-                    //@formatter:on
+                if ((minDate && (minDate.year > year || (minDate.year === year && minDate.month > month) || (minDate.year === year && minDate.month === month && minDate.day > i))) || 
+                    (maxDate && (maxDate.year < year || (maxDate.year === year && maxDate.month < month) || (maxDate.year === year && maxDate.month === month && maxDate.day < i)))) {
+                    dayClass.push('invalid');
+                } else {
+                    dayClass.push('pickDay');
+                }
+                //@formatter:on
                 if (i === day && isActYearMonth) {
                     dayClass.push('active');
                 }
@@ -565,13 +575,13 @@
             } else if (this.dateFormatReg.test(actDateStr)) {
                 actDateObj = this.getActiveDate();
                 //@formatter:off
-                    if ((actDateObj.curYear > minDate.year || (actDateObj.curYear === minDate.year && actDateObj.curMonth > minDate.month) || 
-                        (actDateObj.curYear === minDate.year && actDateObj.curMonth === minDate.month && actDateObj.curDay >= minDate.day)) && 
-                        (actDateObj.curYear < maxDate.year || (actDateObj.curYear === maxDate.year && actDateObj.curMonth < maxDate.month) || 
-                        (actDateObj.curYear === maxDate.year && actDateObj.curMonth === maxDate.month && actDateObj.curDay <= maxDate.day))) {
-                        isValid = true;
-                    }
-                    //@formatter:on
+                if ((actDateObj.curYear > minDate.year || (actDateObj.curYear === minDate.year && actDateObj.curMonth > minDate.month) || 
+                    (actDateObj.curYear === minDate.year && actDateObj.curMonth === minDate.month && actDateObj.curDay >= minDate.day)) && 
+                    (actDateObj.curYear < maxDate.year || (actDateObj.curYear === maxDate.year && actDateObj.curMonth < maxDate.month) || 
+                    (actDateObj.curYear === maxDate.year && actDateObj.curMonth === maxDate.month && actDateObj.curDay <= maxDate.day))) {
+                    isValid = true;
+                }
+                //@formatter:on
             }
 
             if (isValid) {
@@ -613,7 +623,7 @@
         var opts = $.extend({}, $.fn.datepicker.defaults, options);
 
         return this.each(function () {
-            new $.Datepicker (this, opts);
+            return new $.Datepicker (this, opts);
         });
     };
     $.fn.datepicker.defaults = {
@@ -630,4 +640,4 @@
         weekNames: ['日', '一', '二', '三', '四', '五', '六'], //星期显示文本，与firstDay对应
         months: ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一', '十二']//月份显示文本
     };
-})(jQuery);
+}(jQuery));

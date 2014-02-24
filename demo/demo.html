@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <title>TCCloud HIS 2.0</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <link rel="stylesheet" type="text/css" href="../themes/theme.css" />
+    </head>
+    <body>
+        <div>
+            <input id="birthday" />
+        </div>
+        <script type="text/javascript" src="./includes/jquery-1.10.1.min.js"></script>
+        <script type="text/javascript" src="./includes/jquery-textposition.min.js"></script>
+        <script type="text/javascript" src="../src/jquery-datepicker.min.js"></script>
+        <script type="text/javascript">
+            $(function(){
+                $('#birthday').datepicker({
+                    maxDate: new Date()
+                });
+            });
+        </script>
+    </body>
+</html>
